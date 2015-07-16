@@ -3,15 +3,44 @@
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
         <script src="tinyregex.js"></script>
         <link rel="stylesheet" type="text/css" href="tinyregex.css">
+        <script>
+
+$(function(){
+    $("#compile").click(function(e){
+        var compiled_patten= TinyRegex.compile($("#pattern_text").val());
+        var str="";
+        for(var i=0;i<compiled_patten.length;i++){
+            str+= i +" : "+ compiled_patten[i]+"\n";
+        }
+        $("#compiled_text").val(str);
+    })
+    $("#match").click(function(e){
+        var compiled_patten= TinyRegex.compile($("#pattern_text").val());
+        var match= TinyRegex.match($("#input_text").val(),compiled_patten)
+        if(match!=undefined){
+            $("#result_text").val(match);
+        }else{
+            $("#result_text").val("=not match=");
+        }
+        
+    })    
+});
+        </script>
     </head>
     <body>
+<<<<<<< HEAD
         <h1>/Tiny Regex/</h1>
         pattern:<input type="button" id="compile" value="Compile"><br>
         <textarea id="pattern_text" class="tex" >what?</textarea><br>
+=======
+        <h1>Tiny Regex</h1>
+        pattern:  <input type="button" id="compile" value="Compile" class="btn"><br>
+        <textarea id="pattern_text" class="tex" >i dog?</textarea><br>
+>>>>>>> origin/gh-pages
         compiled pattern:<br>
         <textarea id="compiled_text" class="tex" rows="10"></textarea><br>
-        input:<br>
-        <textarea id="input_text" class="tex"></textarea><br>
+        input:  <input type="button" id="match" value="Match?" class="btn"><br>
+        <textarea id="input_text" class="tex">mini door</textarea><br>
         result:<br>
         <textarea id="result_text" class="tex"></textarea><br>
     </body>
