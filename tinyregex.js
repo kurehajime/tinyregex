@@ -5,21 +5,24 @@
     global.TinyRegex = TinyRegex;
     global.TinyRegex.compile = compile;
     global.TinyRegex.match = match;
-
+    global.TinyRegex.getBracketsString=getBracketsString;
+    global.TinyRegex.shiftPattern=shiftPattern;
+    
     function compile(pattern){
         var compiled_patten=[];
         var cursor=0;
+        var prev;
         pattern=".*"+pattern;
         for(var i=0;i<pattern.length;i++){
-            var cursor=compiled_patten.length;
+            cursor=compiled_patten.length;
             switch(pattern[i]){
                 case "?":
-                    var prev=compiled_patten.pop();
+                    prev=compiled_patten.pop();
                     compiled_patten.push("split "+(cursor)+" "+(cursor+1));
                     compiled_patten.push(prev);
                     break;
                 case "|":
-                    var prev=compiled_patten.pop();
+                    prev=compiled_patten.pop();
                     compiled_patten.push("split "+(cursor)+" "+(cursor+2));
                     compiled_patten.push(prev);
                     compiled_patten.push("jmp "+(cursor+3));
@@ -31,18 +34,26 @@
                     break;
                 case "*":
                     if(i==pattern.length-1 || pattern[i+1]!="?"){
-                        var prev=compiled_patten.pop();
+                        prev=compiled_patten.pop();
                         compiled_patten.push("split "+(cursor)+" "+(cursor+2));
                         compiled_patten.push(prev);
                         compiled_patten.push("jmp "+(cursor-1));
                     }else{
-                        var prev=compiled_patten.pop();
+                        prev=compiled_patten.pop();
                         compiled_patten.push("split "+(cursor+2)+" "+(cursor));
                         compiled_patten.push(prev);
                         compiled_patten.push("jmp "+(cursor-1));   
                         i++;
                     }
                     break;
+                case "(":
+                    var packedStr=getBracketsString(pattern,i);
+                    if(packedStr!=""){
+                        compiled_patten.push("pack "+packedStr+"");
+                        i+=packedStr.length+1;
+                        break;    
+                    }
+                    //break;   
                 default:
                     compiled_patten.push("char "+pattern[i]+"");
                     break;
@@ -93,6 +104,73 @@
                     return undefined;
                     break;
             }
+        }
+    }
+    /*
+    function unPack(compiled_pattern){
+        var rtnPattern=compiled_pattern.concat();
+        var ptn;
+        for(var i=0;i<rtnPattern.length;i++){
+            ptn =rtnPattern[i].split(" ");
+            if(ptn[0]=="pack"){
+                var unpacked=compile(ptn[1]);
+                unpacked=unpacked.splice(3,unpacked.length-4);
+                var arr1=rtnPattern.slice(0,i)
+                var arr2=shiftPattern(unpacked,i-3);
+                var arr3=shiftPattern(rtnPattern.slice(i+1,compiled_pattern.length),arr2.length-3)
+                rtnPattern=[];
+                rtnPattern=rtnPattern.concat(arr1)
+                rtnPattern=rtnPattern.concat(arr2)
+                rtnPattern=rtnPattern.concat(arr3)
+            }
+        }
+        return rtnPattern;
+    }
+    */
+    function shiftPattern(compiled_pattern,inc){
+        var ptn;
+        var rtnPattern=[];
+        for(var i=0;i<compiled_pattern.length;i++){
+            ptn=compiled_pattern[i].split(" ");
+            switch(ptn[0]){
+                case "jmp":
+                    rtnPattern.push("jmp "+(parseInt(ptn[1])+inc))
+                    break;
+                case "split":
+                    rtnPattern.push("split "+(parseInt(ptn[1])+inc)+" "+(parseInt(ptn[2])+inc))
+                    break;
+                default:
+                    rtnPattern.push(compiled_pattern[i]);
+                    break;
+            }
+        }
+        return rtnPattern;
+    }
+    
+    function getBracketsString(str,idx){
+        var startCount=0;
+        var endCount=0;
+        var rtnStr="";
+        for(var i=idx;i<=str.length;i++){
+            if(str[i]=="("){
+                startCount++;
+                if(startCount==1){
+                    continue;
+                }
+            }else if(str[i]==")"){
+                endCount++;
+                if(startCount!=0&&startCount==endCount){
+                    break;
+                }                
+            }
+            if(startCount!=0){
+                rtnStr+=str[i];            
+            }
+        }    
+        if(startCount==endCount){
+            return rtnStr;
+        }else{
+            return "";
         }
     }
     
